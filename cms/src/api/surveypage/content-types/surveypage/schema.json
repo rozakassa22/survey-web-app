@@ -1,0 +1,17 @@
+{
+  "kind": "singleType",
+  "collectionName": "surveypages",
+  "info": {
+    "singularName": "surveypage",
+    "pluralName": "surveypages",
+    "displayName": "Surveypage"
+  },
+  "options": {
+    "draftAndPublish": true
+  },
+  "attributes": {
+    "title": {
+      "type": "string"
+    }
+  }
+}
