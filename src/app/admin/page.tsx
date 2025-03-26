@@ -180,15 +180,9 @@ export default function AdminDashboard() {
 
       <div className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
         <div className="px-4 py-6 sm:px-0">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
             Admin Dashboard
           </h1>
-
-          <div className="flex items-center mb-4">
-            <h1 className="text-xl font-semibold text-gray-900">
-              Admin Dashboard
-            </h1>
-          </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8 ">
             <div className="bg-white overflow-hidden shadow rounded-lg dark:bg-gray-800">
               <div className="px-4 py-5 sm:p-6 dark:text-white dark:bg-gray-800 rounded-lg">

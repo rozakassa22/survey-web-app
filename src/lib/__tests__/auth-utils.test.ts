@@ -6,7 +6,16 @@ import {
 } from '../auth-utils';
 import * as jwt from 'jsonwebtoken';
 import * as bcrypt from 'bcryptjs';
-import { NextResponse } from 'next/server';
+import type { NextResponse } from 'next/server';
+
+// Define type for mock response to avoid using 'any'
+interface MockResponse<T = unknown> {
+  cookies: {
+    set: jest.Mock;
+    delete?: jest.Mock;
+  };
+  data?: T;
+}
 
 // Mock prisma module
 jest.mock('../prisma', () => ({
@@ -48,14 +57,14 @@ describe('Auth Utils', () => {
 
   describe('setAuthCookies', () => {
     it('should set auth cookies correctly', () => {
-      const mockResponse = {
+      const mockResponse: MockResponse = {
         cookies: {
           set: jest.fn(),
         },
       };
 
       const result = setAuthCookies(
-        mockResponse as any,
+        mockResponse as unknown as NextResponse,
         'user-123',
         'test@example.com',
         'USER'

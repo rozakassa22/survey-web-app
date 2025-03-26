@@ -98,7 +98,7 @@ export async function parseAndValidateRequest<T>(
 }
 
 // Create API route handler with standard error handling
-export function createApiHandler<ReqT = unknown, ResT = unknown>(
+export function createApiHandler<ResT = unknown>(
   handler: (req?: Request) => Promise<ResT>,
   errorMessage: string
 ) {

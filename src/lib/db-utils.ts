@@ -1,5 +1,5 @@
 import { prisma } from './prisma';
-import { Survey, Question, Response, User, Prisma, Role } from '@prisma/client';
+import { Survey, Question, Response, User } from '@prisma/client';
 
 // Define extended types for nested data structures
 export interface SurveyWithQuestions extends Survey {
@@ -12,7 +12,8 @@ export interface SurveyWithQuestionsAndResponses extends Survey {
   })[];
 }
 
-export interface UserWithoutPassword extends Omit<User, 'password'> {}
+// Define user type without password
+export type UserWithoutPassword = Omit<User, 'password'>;
 
 // Define order direction type
 export type OrderDirection = 'asc' | 'desc';

@@ -1,16 +1,26 @@
 import { 
   successResponse, 
   errorResponse,
-  withErrorHandling
+  withErrorHandling,
+  ApiSuccessResponse,
+  ApiErrorResponse,
+  ApiResponse
 } from '../api-utils';
 
+// Define mock response structure for tests
+interface MockNextResponse<T = unknown> {
+  data: T;
+  options: { status: number };
+}
+
 // Set environment to test
-process.env.NODE_ENV = 'test';
+const originalEnv = process.env.NODE_ENV;
+process.env = { ...process.env, NODE_ENV: 'test' };
 
 // Mock NextResponse
 jest.mock('next/server', () => ({
   NextResponse: {
-    json: jest.fn().mockImplementation((data, options) => {
+    json: jest.fn().mockImplementation(<T>(data: T, options: { status: number }): MockNextResponse<T> => {
       return { data, options };
     }),
   }
@@ -24,10 +34,15 @@ describe('API Utils', () => {
     jest.clearAllMocks();
   });
 
+  afterAll(() => {
+    // Restore original environment
+    process.env = { ...process.env, NODE_ENV: originalEnv };
+  });
+
   describe('successResponse', () => {
     it('should create a success response with default status', () => {
       const data = { id: '123', name: 'Test' };
-      const result = successResponse(data);
+      const result = successResponse(data) as unknown as MockNextResponse<ApiSuccessResponse<typeof data>>;
       
       expect(result.data).toEqual({
         success: true,
@@ -39,7 +54,7 @@ describe('API Utils', () => {
 
     it('should create a success response with custom message and status', () => {
       const data = { id: '123', name: 'Test' };
-      const result = successResponse(data, 'Created successfully', 201);
+      const result = successResponse(data, 'Created successfully', 201) as unknown as MockNextResponse<ApiSuccessResponse<typeof data>>;
       
       expect(result.data).toEqual({
         success: true,
@@ -52,7 +67,7 @@ describe('API Utils', () => {
 
   describe('errorResponse', () => {
     it('should create an error response with default status', () => {
-      const result = errorResponse('Something went wrong');
+      const result = errorResponse('Something went wrong') as unknown as MockNextResponse<ApiErrorResponse>;
       
       expect(result.data).toEqual({
         success: false,
@@ -63,11 +78,12 @@ describe('API Utils', () => {
     });
 
     it('should create an error response with custom status and details in development', () => {
+      // Save original and set to development
       const originalNodeEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'development';
+      process.env = { ...process.env, NODE_ENV: 'development' };
       
       const details = { error: 'Details about the error' };
-      const result = errorResponse('Bad request', 400, details);
+      const result = errorResponse('Bad request', 400, details) as unknown as MockNextResponse<ApiErrorResponse>;
       
       expect(result.data).toEqual({
         success: false,
@@ -76,14 +92,15 @@ describe('API Utils', () => {
       });
       expect(result.options).toEqual({ status: 400 });
       
-      process.env.NODE_ENV = originalNodeEnv;
+      // Restore environment
+      process.env = { ...process.env, NODE_ENV: originalNodeEnv };
     });
   });
 
   describe('withErrorHandling', () => {
     it('should return success response when handler succeeds', async () => {
       const handler = jest.fn().mockResolvedValue({ id: '123' });
-      const result = await withErrorHandling(handler, 'Error message');
+      const result = await withErrorHandling(handler, 'Error message') as unknown as MockNextResponse<ApiResponse<{ id: string }>>;
       
       expect(handler).toHaveBeenCalled();
       expect(result.data).toEqual({
@@ -97,7 +114,7 @@ describe('API Utils', () => {
       const error = new Error('Handler error');
       const handler = jest.fn().mockRejectedValue(error);
       
-      const result = await withErrorHandling(handler, 'Custom error message');
+      const result = await withErrorHandling(handler, 'Custom error message') as unknown as MockNextResponse<ApiResponse<unknown>>;
       
       expect(handler).toHaveBeenCalled();
       expect(result.data.success).toBe(false);

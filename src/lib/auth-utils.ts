@@ -3,7 +3,7 @@ import jwt, { JwtPayload } from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { prisma } from './prisma';
 import { NextResponse } from 'next/server';
-import { Role, User } from '@prisma/client';
+import { Role } from '@prisma/client';
 
 // Define JWT payload type
 export interface AuthJwtPayload extends JwtPayload {

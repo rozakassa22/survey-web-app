@@ -1,23 +1,44 @@
 import { middleware } from '../middleware';
+import type { NextRequest } from 'next/server';
+
+// Define a minimal interface for our mock
+interface MockRequestProps {
+  cookies: {
+    get: jest.Mock;
+  };
+  nextUrl: {
+    pathname: string;
+    clone: jest.Mock;
+  };
+  url: string;
+  [key: string]: unknown;
+}
 
 // Mock NextRequest and NextResponse
-const mockRedirect = jest.fn().mockImplementation((url) => ({ 
+const mockRedirect = jest.fn().mockImplementation((url: URL) => ({ 
   url, 
-  type: 'redirect' 
+  type: 'redirect',
+  status: 302,
+  headers: new Headers(),
 }));
 
-const mockNext = jest.fn().mockReturnValue({ type: 'next' });
+const mockNext = jest.fn().mockReturnValue({ 
+  type: 'next',
+  status: 200,
+  headers: new Headers(),
+});
 
 // Mock NextRequest and NextResponse
 jest.mock('next/server', () => ({
   NextResponse: {
-    redirect: (url) => mockRedirect(url),
+    redirect: (url: URL) => mockRedirect(url),
     next: () => mockNext(),
   },
+  NextRequest: jest.fn(),
 }));
 
 describe('Middleware', () => {
-  let mockRequest: any;
+  let mockRequest: MockRequestProps;
   
   beforeEach(() => {
     jest.clearAllMocks();
@@ -40,7 +61,7 @@ describe('Middleware', () => {
     mockRequest.cookies.get.mockReturnValue(null);
     mockRequest.nextUrl.pathname = '/user';
     
-    const result = middleware(mockRequest);
+    const result = middleware(mockRequest as unknown as NextRequest);
     
     expect(mockRedirect).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -55,7 +76,7 @@ describe('Middleware', () => {
     mockRequest.cookies.get.mockReturnValue(null);
     mockRequest.nextUrl.pathname = '/login';
     
-    const result = middleware(mockRequest);
+    const result = middleware(mockRequest as unknown as NextRequest);
     
     expect(mockNext).toHaveBeenCalled();
     expect(result.type).toBe('next');
@@ -63,7 +84,7 @@ describe('Middleware', () => {
   
   it('should redirect admin users to admin dashboard when accessing root', () => {
     // Admin token
-    mockRequest.cookies.get.mockImplementation((name) => {
+    mockRequest.cookies.get.mockImplementation((name: string) => {
       if (name === 'token') return { value: 'mock-token' };
       if (name === 'userRole') return { value: 'ADMIN' };
       return null;
@@ -71,7 +92,7 @@ describe('Middleware', () => {
     
     mockRequest.nextUrl.pathname = '/';
     
-    const result = middleware(mockRequest);
+    const result = middleware(mockRequest as unknown as NextRequest);
     
     expect(mockRedirect).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -83,7 +104,7 @@ describe('Middleware', () => {
   
   it('should redirect regular users to user dashboard when accessing root', () => {
     // User token
-    mockRequest.cookies.get.mockImplementation((name) => {
+    mockRequest.cookies.get.mockImplementation((name: string) => {
       if (name === 'token') return { value: 'mock-token' };
       if (name === 'userRole') return { value: 'USER' };
       return null;
@@ -91,7 +112,7 @@ describe('Middleware', () => {
     
     mockRequest.nextUrl.pathname = '/';
     
-    const result = middleware(mockRequest);
+    const result = middleware(mockRequest as unknown as NextRequest);
     
     expect(mockRedirect).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -103,7 +124,7 @@ describe('Middleware', () => {
   
   it('should redirect admin users to admin dashboard when trying to access user page', () => {
     // Admin token
-    mockRequest.cookies.get.mockImplementation((name) => {
+    mockRequest.cookies.get.mockImplementation((name: string) => {
       if (name === 'token') return { value: 'mock-token' };
       if (name === 'userRole') return { value: 'ADMIN' };
       return null;
@@ -111,7 +132,7 @@ describe('Middleware', () => {
     
     mockRequest.nextUrl.pathname = '/user';
     
-    const result = middleware(mockRequest);
+    const result = middleware(mockRequest as unknown as NextRequest);
     
     expect(mockRedirect).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -123,7 +144,7 @@ describe('Middleware', () => {
   
   it('should redirect regular users to user dashboard when trying to access admin page', () => {
     // User token
-    mockRequest.cookies.get.mockImplementation((name) => {
+    mockRequest.cookies.get.mockImplementation((name: string) => {
       if (name === 'token') return { value: 'mock-token' };
       if (name === 'userRole') return { value: 'USER' };
       return null;
@@ -131,7 +152,7 @@ describe('Middleware', () => {
     
     mockRequest.nextUrl.pathname = '/admin';
     
-    const result = middleware(mockRequest);
+    const result = middleware(mockRequest as unknown as NextRequest);
     
     expect(mockRedirect).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -143,7 +164,7 @@ describe('Middleware', () => {
   
   it('should allow authenticated users to access their appropriate dashboard', () => {
     // Admin token
-    mockRequest.cookies.get.mockImplementation((name) => {
+    mockRequest.cookies.get.mockImplementation((name: string) => {
       if (name === 'token') return { value: 'mock-token' };
       if (name === 'userRole') return { value: 'ADMIN' };
       return null;
@@ -151,7 +172,7 @@ describe('Middleware', () => {
     
     mockRequest.nextUrl.pathname = '/admin';
     
-    const result = middleware(mockRequest);
+    const result = middleware(mockRequest as unknown as NextRequest);
     
     expect(mockNext).toHaveBeenCalled();
     expect(result.type).toBe('next');
@@ -159,7 +180,7 @@ describe('Middleware', () => {
   
   it('should redirect authenticated users away from login page', () => {
     // User token
-    mockRequest.cookies.get.mockImplementation((name) => {
+    mockRequest.cookies.get.mockImplementation((name: string) => {
       if (name === 'token') return { value: 'mock-token' };
       if (name === 'userRole') return { value: 'USER' };
       return null;
@@ -167,7 +188,7 @@ describe('Middleware', () => {
     
     mockRequest.nextUrl.pathname = '/login';
     
-    const result = middleware(mockRequest);
+    const result = middleware(mockRequest as unknown as NextRequest);
     
     expect(mockRedirect).toHaveBeenCalledWith(
       expect.objectContaining({

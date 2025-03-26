@@ -1,7 +1,15 @@
 import path from 'path';
 
-export default ({ env }) => {
-  const client = env('DATABASE_CLIENT', 'sqlite');
+type DatabaseClient = 'mysql' | 'postgres' | 'sqlite';
+
+interface Env {
+  (key: string, defaultValue?: string): string | undefined;
+  int(key: string, defaultValue?: number): number;
+  bool(key: string, defaultValue?: boolean): boolean;
+}
+
+export default ({ env }: { env: Env }) => {
+  const client = (env('DATABASE_CLIENT', 'sqlite') as DatabaseClient) || 'sqlite';
 
   const connections = {
     mysql: {
@@ -44,7 +52,7 @@ export default ({ env }) => {
     },
     sqlite: {
       connection: {
-        filename: path.join(__dirname, '..', '..', env('DATABASE_FILENAME', '.tmp/data.db')),
+        filename: path.join(__dirname, '..', '..', env('DATABASE_FILENAME') ?? '.tmp/data.db'),
       },
       useNullAsDefault: true,
     },

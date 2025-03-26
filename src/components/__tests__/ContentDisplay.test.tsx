@@ -1,9 +1,27 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import '@testing-library/jest-dom';
+
+// Mock toast before importing the component
+jest.mock('react-hot-toast', () => ({
+  error: jest.fn(),
+  success: jest.fn()
+}));
+
+// Import the component after mocking
 import SupplementaryContent from '../ContentDisplay';
 import toast from 'react-hot-toast';
 
+// Define EventSource interface
+interface MockEventSourceInterface {
+  onopen: jest.Mock;
+  onmessage: jest.Mock;
+  onerror: jest.Mock;
+  addEventListener: jest.Mock;
+  close: jest.Mock;
+}
+
 // Mock EventSource
-class MockEventSource {
+class MockEventSource implements MockEventSourceInterface {
   onopen = jest.fn();
   onmessage = jest.fn();
   onerror = jest.fn();
@@ -15,20 +33,11 @@ class MockEventSource {
   }
 }
 
-// Add EventSource to global
-global.EventSource = MockEventSource as any;
+// Add EventSource to global with proper typing
+global.EventSource = MockEventSource as unknown as typeof EventSource;
 
-// Mock the fetch function
+// Mock fetch
 global.fetch = jest.fn();
-
-// Mock toast
-jest.mock('react-hot-toast', () => ({
-  __esModule: true,
-  default: {
-    success: jest.fn(),
-    error: jest.fn(),
-  },
-}));
 
 describe('SupplementaryContent', () => {
   beforeEach(() => {

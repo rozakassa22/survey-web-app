@@ -1,8 +1,12 @@
 'use strict';
 
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const fs = require('fs-extra');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const path = require('path');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const mime = require('mime-types');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { categories, authors, articles, global, about } = require('../data/data.json');
 
 async function seedExampleApp() {
@@ -233,6 +237,7 @@ async function importSeedData() {
 }
 
 async function main() {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { createStrapi, compileStrapi } = require('@strapi/strapi');
 
   const appContext = await compileStrapi();

@@ -1,23 +1,49 @@
 import { POST } from '../auth/login/route';
-import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { comparePasswords, setAuthCookies } from '@/lib/auth-utils';
 
-// Define Request and Response for Node environment
+// Mock global Response and Request
+interface RequestOptions {
+  method?: string;
+  body?: string;
+  headers?: HeadersInit;
+}
+
 if (typeof global.Request === 'undefined') {
   global.Request = class Request {
-    constructor(url, options = {}) {
+    constructor(url: string, options: RequestOptions = {}) {
       this.url = url;
       this.method = options.method || 'GET';
       this.body = options.body;
       this.headers = new Headers(options.headers || {});
     }
 
+    url: string;
+    method: string;
+    body: string | undefined;
+    headers: Headers;
+
     json() {
       return Promise.resolve(
         typeof this.body === 'string' ? JSON.parse(this.body) : this.body
       );
     }
+  } as unknown as typeof Request;
+}
+
+// Define a response type that matches what the tests expect
+interface MockApiResponse {
+  data: {
+    success: boolean;
+    message: string;
+    data?: Record<string, unknown>;
+  };
+  options: {
+    status: number;
+  };
+  cookies: {
+    set: jest.Mock;
+    delete: jest.Mock;
   };
 }
 
@@ -35,23 +61,18 @@ jest.mock('@/lib/auth-utils', () => ({
   setAuthCookies: jest.fn().mockImplementation((response) => response),
 }));
 
-jest.mock('next/server', () => {
-  const originalModule = jest.requireActual('next/server');
-  return {
-    ...originalModule,
-    NextResponse: {
-      ...originalModule.NextResponse,
-      json: jest.fn().mockImplementation((data, options) => ({
-        data,
-        options,
-        cookies: {
-          set: jest.fn(),
-          delete: jest.fn(),
-        },
-      })),
-    },
-  };
-});
+jest.mock('next/server', () => ({
+  NextResponse: {
+    json: jest.fn().mockImplementation((data, options) => ({
+      data,
+      options,
+      cookies: {
+        set: jest.fn(),
+        delete: jest.fn(),
+      },
+    })),
+  },
+}));
 
 describe('Login API Route', () => {
   beforeEach(() => {
@@ -70,7 +91,7 @@ describe('Login API Route', () => {
     // Mock user not found
     (prisma.user.findUnique as jest.Mock).mockResolvedValue(null);
 
-    const response = await POST(request);
+    const response = await POST(request) as unknown as MockApiResponse;
     const responseData = response.data;
 
     expect(prisma.user.findUnique).toHaveBeenCalledWith({
@@ -99,7 +120,7 @@ describe('Login API Route', () => {
     });
     (comparePasswords as jest.Mock).mockResolvedValue(false);
 
-    const response = await POST(request);
+    const response = await POST(request) as unknown as MockApiResponse;
     const responseData = response.data;
 
     expect(prisma.user.findUnique).toHaveBeenCalledWith({
@@ -131,7 +152,7 @@ describe('Login API Route', () => {
     (prisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
     (comparePasswords as jest.Mock).mockResolvedValue(true);
 
-    const response = await POST(request);
+    const response = await POST(request) as unknown as MockApiResponse;
     const responseData = response.data;
 
     expect(prisma.user.findUnique).toHaveBeenCalledWith({
@@ -161,7 +182,7 @@ describe('Login API Route', () => {
       }),
     });
 
-    const response = await POST(request);
+    const response = await POST(request) as unknown as MockApiResponse;
     const responseData = response.data;
 
     expect(responseData.success).toBe(false);
@@ -180,7 +201,7 @@ describe('Login API Route', () => {
     // Mock a database error
     (prisma.user.findUnique as jest.Mock).mockRejectedValue(new Error('Database error'));
 
-    const response = await POST(request);
+    const response = await POST(request) as unknown as MockApiResponse;
     const responseData = response.data;
 
     expect(responseData.success).toBe(false);
