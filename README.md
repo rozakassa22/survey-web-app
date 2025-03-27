@@ -121,6 +121,9 @@ npm run develop
 
 Access the Strapi admin panel at [http://localhost:1337/admin](http://localhost:1337/admin)
 
-## License
+## Demo
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+https://survey-webs-app.vercel.app/
+
+[![Watch the video](https://drive.google.com/uc?export=view&id=1KGiSPnAMsCz3Kos0_mhyw8hLnDfLo-bi)](https://drive.google.com/file/d/1KGiSPnAMsCz3Kos0_mhyw8hLnDfLo-bi/view?usp=sharing)
+
