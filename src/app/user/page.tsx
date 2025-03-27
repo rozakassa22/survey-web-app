@@ -34,11 +34,16 @@ export default function UserDashboard() {
 
   const {
     register,
+    setValue,
+    watch,
     handleSubmit,
     formState: { errors },
   } = useForm<SurveyFormData>({
     resolver: zodResolver(surveySchema),
   });
+
+  // Watch the title field so we can control its value
+  const titleValue = watch("title");
 
   const generateQuestions = async (title: string) => {
     try {
@@ -60,8 +65,7 @@ export default function UserDashboard() {
         throw new Error("Invalid questions data received");
       }
       
-      // Log the questions we received
-      console.log("Generated questions:", data.data.questions);
+
 
       // Create survey with the questions
       const surveyResponse = await fetch("/api/surveys", {
@@ -71,7 +75,7 @@ export default function UserDashboard() {
         },
         body: JSON.stringify({
           title,
-          questions: data.data.questions, // Access questions through data.data
+          questions: data.data.questions,
         }),
       });
 
@@ -82,16 +86,16 @@ export default function UserDashboard() {
       }
 
       const surveyData = await surveyResponse.json();
+     
       
-      // Log the created survey
-      console.log("Created survey:", surveyData);
-      
-      setCurrentSurvey(surveyData.data); // Access through surveyData.data
+      setCurrentSurvey(surveyData.data);
       setQuestions(surveyData.data.questions);
       setAnswers(new Array(surveyData.data.questions.length).fill(""));
       toast.success("Questions generated successfully!");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to generate questions");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to generate questions"
+      );
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -127,11 +131,10 @@ export default function UserDashboard() {
         surveyId: currentSurvey.id,
         answers: answers.map((answer, index) => ({
           questionId: questions[index].id,
-          text: answer
-        }))
+          text: answer,
+        })),
       };
       
-      console.log("Submitting answers:", responseData);
       
       const response = await fetch("/api/responses", {
         method: "POST",
@@ -147,15 +150,15 @@ export default function UserDashboard() {
         throw new Error("Failed to submit answers: " + errorData.message);
       }
 
-      const result = await response.json();
-      console.log("Submission result:", result);
       
       toast.success("Answers submitted successfully!");
       setQuestions([]);
       setAnswers([]);
       setCurrentSurvey(null);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to submit answers");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to submit answers"
+      );
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -203,6 +206,8 @@ export default function UserDashboard() {
                 type="text"
                 id="title"
                 {...register("title")}
+                value={titleValue || ""}
+                onChange={(e) => setValue("title", e.target.value.toLowerCase())}
                 className="mt-1 block w-full text-black px-2 py-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                 placeholder="Enter your survey title"
               />

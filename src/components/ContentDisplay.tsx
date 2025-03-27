@@ -45,14 +45,12 @@ export default function SupplementaryContent() {
 
       eventSource.onopen = () => {
         setIsConnected(true);
-        console.log("SSE connection opened");
       };
 
       eventSource.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
           if (data.type === "connected") {
-            console.log("SSE connected successfully");
           } else if (data.type === "update") {
             fetchContent();
           }
@@ -66,7 +64,6 @@ export default function SupplementaryContent() {
         setIsConnected(false);
         eventSource?.close();
         reconnectTimeout = setTimeout(() => {
-          console.log("Attempting to reconnect SSE...");
           setupSSE();
         }, 5000);
       };
@@ -77,7 +74,6 @@ export default function SupplementaryContent() {
         const response = await fetch("/api/content");
         const responseData = await response.json();
 
-        console.log("Content API response:", responseData);
 
         if (
           responseData.success &&
@@ -98,7 +94,6 @@ export default function SupplementaryContent() {
             ["survey-guide", "privacy-policy"].includes(page.slug)
           );
 
-          console.log("Filtered pages:", filteredPages);
           setPages(filteredPages);
         } else {
           console.error("Invalid content data structure:", responseData);
