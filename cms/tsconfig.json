@@ -29,6 +29,7 @@
     ".cache/",
     ".tmp/",
     "src/admin/",
+    "cms", 
     "**/*.test.*",
     "src/plugins/**"
   ]
