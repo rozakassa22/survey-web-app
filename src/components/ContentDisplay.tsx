@@ -98,7 +98,6 @@ export default function SupplementaryContent() {
         } else {
           console.error("Invalid content data structure:", responseData);
           setPages([]);
-          toast.error("Content data has an unexpected format");
         }
       } catch (error) {
         console.error("Error fetching content:", error);
